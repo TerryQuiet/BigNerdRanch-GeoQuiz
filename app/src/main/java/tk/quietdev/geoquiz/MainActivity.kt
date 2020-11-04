@@ -1,77 +1,74 @@
 package tk.quietdev.geoquiz
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import tk.quietdev.geoquiz.databinding.ActivityMainBinding
+import androidx.activity.viewModels
+
+// TODO: 03/11/2020
+// TODO: Challenge: Graded Quiz
+private const val KEY_INDEX = "index"
+private const val KEY_ANS_ARRAY = "answeredArr"
+private const val KEY_IS_RIGHT_ARRAY = "isRightArray"
+private const val KEY_RIGHT_ANS_COUNT = "rightAnsCount"
 
 class MainActivity : AppCompatActivity() {
 
+    private val version = "V 2"
     private lateinit var binding : ActivityMainBinding
+    private val quizViewModel: QuizViewModel by viewModels()
 
-    private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans, true),
-        Question(R.string.question_mideast, false),
-        Question(R.string.question_africa, false),
-        Question(R.string.question_americas, true),
-        Question(R.string.question_asia, true))
-
-    private var currentIndex = 0
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        savedInstanceState.apply {
+            putInt(KEY_INDEX,  quizViewModel.currentIndex)
+            putBooleanArray(KEY_ANS_ARRAY, quizViewModel.answeredQuestionArray)
+            putBooleanArray(KEY_IS_RIGHT_ARRAY, quizViewModel.answeredQuestionIsCorrectArray)
+            putInt(KEY_RIGHT_ANS_COUNT, quizViewModel.rightAns)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        quizViewModel.currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.rightAns = savedInstanceState?.getInt(KEY_RIGHT_ANS_COUNT,0) ?: 0
+        if (savedInstanceState != null) {
+            quizViewModel.answeredQuestionArray = savedInstanceState.getBooleanArray(KEY_ANS_ARRAY)!!
+            quizViewModel.answeredQuestionIsCorrectArray = savedInstanceState.getBooleanArray(KEY_IS_RIGHT_ARRAY)!!
+        }
         setContentView(binding.root)
+        binding.tvVersion.text = version
+
         binding.trueButton.setOnClickListener {
-            checkAnswer(true)
+            Toast.makeText(this, quizViewModel.checkAnswer(true), Toast.LENGTH_SHORT).show()
         }
 
         binding.falseButton.setOnClickListener {
-            checkAnswer(false)
+            Toast.makeText(this, quizViewModel.checkAnswer(false), Toast.LENGTH_SHORT).show()
         }
 
         binding.nextButton.setOnClickListener {
-            updateIndex("next")
+            updateView("next")
         }
 
         binding.prevButton.setOnClickListener {
-            updateIndex("prev")
+            updateView("prev")
         }
 
-        updateQuestion()
+        binding.questionTextView.setText(quizViewModel.updateQuestion())
 
     }
-    private fun updateIndex(string: String) {
-        when (string) {
-            "next" ->  currentIndex = (currentIndex + 1) % questionBank.size
-            "prev" -> {
-                if ( currentIndex == 0 ) {
-                    currentIndex = questionBank.size - 1
-                } else currentIndex--
-            }
+
+    private fun updateView(string: String) {
+        binding.questionTextView.setText(quizViewModel.updateIndex(string))
+        if (quizViewModel.allComplete()) {
+            Toast.makeText(this, "COMPLETE with ${quizViewModel.percentage}%", Toast.LENGTH_SHORT).show()
         }
-        updateQuestion()
     }
 
-    private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
-        binding.questionTextView.setText(questionTextResId)
-    }
-
-
-    private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
-
-        val messageResId = if (userAnswer == correctAnswer) {
-            R.string.correct_toast
-        } else {
-            R.string.incorrect_toast
-        }
-
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-            .show()
-    }
 
 
 }
