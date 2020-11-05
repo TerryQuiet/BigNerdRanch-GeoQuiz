@@ -8,6 +8,7 @@ class QuizViewModel : ViewModel() {
 
     var percentage = 0
     var rightAns = 0
+    var timesCheated = 0
 
     private val questionBank = listOf(
         Question(R.string.question_australia, true),
@@ -21,16 +22,23 @@ class QuizViewModel : ViewModel() {
 
      var answeredQuestionArray = BooleanArray(questionBank.size)
      var answeredQuestionIsCorrectArray = BooleanArray(questionBank.size)
+     var answeredQuestionIsCheatedArray = BooleanArray(questionBank.size)
 
     override fun onCleared() {
         super.onCleared()
     }
+
 
     val currentQuestionAnswer: Boolean
         get() = questionBank[currentIndex].answer
 
     /*val currentQuestionText: Int
         get() = questionBank[currentIndex].textResId*/
+
+    fun setCheated () {
+        answeredQuestionIsCheatedArray[currentIndex] = true
+        timesCheated++
+    }
 
 
      fun updateIndex(string: String) : Int {
@@ -53,6 +61,8 @@ class QuizViewModel : ViewModel() {
 
     fun checkAnswer(userAnswer: Boolean) : Int {
         val correctAnswer = questionBank[currentIndex].answer
+        if (answeredQuestionIsCheatedArray[currentIndex])
+            return R.string.judgment_toast
        return when (answeredQuestionArray[currentIndex]) {
            true -> R.string.question_answered_toast
            false -> {
@@ -70,7 +80,7 @@ class QuizViewModel : ViewModel() {
 
     fun allComplete() : Boolean {
         return if (!answeredQuestionArray.contains(false)) {
-            percentage = 100 / questionBank.size * rightAns
+            percentage = (100 / questionBank.size.toDouble() * rightAns).toInt()
             true
         } else
             false
