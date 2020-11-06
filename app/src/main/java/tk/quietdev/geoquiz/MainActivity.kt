@@ -24,7 +24,7 @@ private const val KEY_CHEATED_ARRAY = "cheatedArray"
 
 class MainActivity : AppCompatActivity() {
 
-    private val version = "V 2"
+    private val version = "FINAL"
     private lateinit var binding : ActivityMainBinding
     private val quizViewModel: QuizViewModel by viewModels()
 
